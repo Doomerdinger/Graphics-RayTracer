@@ -8,5 +8,7 @@ The second two (optional, though you must have both) are the xres and yres, sing
   
 Typical .obj files will not work, this application requires a camera object and light objects in the obj file as well. There are examples provided.
 
+Some of the code I was provided uses fopen, which is marked as unsafe. You'll have to add a preprocessor definition in visual studio (it will tell you).
+
 Files used but not created by me are marked with a comment at the top. 
 Source for theose files is Dr. Micah Taylor at Rose-Hulman Institute of technology.
