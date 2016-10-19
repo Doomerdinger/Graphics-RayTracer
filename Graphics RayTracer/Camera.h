@@ -27,25 +27,25 @@ public:
 	/// Gets the point where this camera is looking.
 	/// </summary>
 	/// <returns>The look point of this camera</returns>
-	Vector3 getLookPoint();
+	Vector3 getLookPoint() const;
 
 	/// <summary>
 	/// Gets the look vector of this camera.
 	/// </summary>
 	/// <returns>The vector that represents the direction this camera is looking. Not nessecarily normalized.</returns>
-	Vector3 getLookVec();
+	Vector3 getLookVec() const;
 
 	/// <summary>
 	/// Gets the position of this camera.
 	/// </summary>
 	/// <returns>The position vector (x,y,z) of this camera</returns>
-	Vector3 getPosVec();
+	Vector3 getPosVec() const;
 
 	/// <summary>
 	/// Gets the up vector of this camera.
 	/// </summary>
 	/// <returns>The normalized directional vector indicating which direction is up relative to this camera.</returns>
-	Vector3 getUpVec();
+	Vector3 getUpVec() const;
 
 private:
 	/// <summary>

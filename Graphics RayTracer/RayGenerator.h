@@ -23,7 +23,7 @@ public:
 	/// <param name="x">The desired x coord.</param>
 	/// <param name="y">The desired y coord.</param>
 	/// <returns></returns>
-	Ray getRay(float x, float y);
+	Ray getRay(float x, float y) const;
 
 private:
 	/// <summary>

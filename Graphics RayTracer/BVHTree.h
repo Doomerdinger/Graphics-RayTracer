@@ -34,10 +34,11 @@ public:
 	/// Checks to see if the given Ray intersects this node. If it does, then it checks to see
 	/// if the Ray intesects either its left or right nodes (if any), recursively, until a node is found
 	/// with only one primitive, at which point the primitive's intersects function is called and
-	/// that result is returned.
+	/// that result is returned. Additionally, Primitive pointer passed in is set to the
+	/// of the the primitive that was hit.
 	/// </summary>
-	/// <param name="r">The r.</param>
-	/// <param name="p">The p.</param>
+	/// <param name="r">The ray that will be checked for intersection.</param>
+	/// <param name="p">A pointer to a primitive. If one is hit, this pointer will be directed at it.</param>
 	/// <returns>Distance to the interesected primitive. Negative value if no intersection is found.</returns>
 	float intersects(Ray r, Primitive*& p) const;
 
@@ -45,13 +46,13 @@ public:
 	/// Gets the minimum bounds of this BVHTree node. 
 	/// </summary>
 	/// <returns>Vctor3 representing the minimum bounds (x,y,z)</returns>
-	Vector3 getMinBound();
+	Vector3 getMinBound() const;
 
 	/// <summary>
 	/// Gets the maximum bounds of this BVHTree node. 
 	/// </summary>
 	/// <returns>Vctor3 representing the maximum bounds (x,y,z)</returns>
-	Vector3 getMaxBound();
+	Vector3 getMaxBound() const;
 
 
 	/// <summary>

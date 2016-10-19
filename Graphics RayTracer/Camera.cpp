@@ -18,22 +18,22 @@ Camera::~Camera()
 {
 }
 
-Vector3 Camera::getLookPoint()
+Vector3 Camera::getLookPoint() const
 {
 	return this->lookPoint;
 }
 
-Vector3 Camera::getLookVec()
+Vector3 Camera::getLookVec() const
 {
 	return (this->lookPoint - this->position);
 }
 
-Vector3 Camera::getPosVec()
+Vector3 Camera::getPosVec() const
 {
 	return this->position;
 }
 
-Vector3 Camera::getUpVec()
+Vector3 Camera::getUpVec() const
 {
 	return this->up;
 }

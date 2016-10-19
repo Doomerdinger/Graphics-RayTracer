@@ -12,7 +12,7 @@ RayGenerator::~RayGenerator()
 {
 }
 
-Ray RayGenerator::getRay(float x, float y)
+Ray RayGenerator::getRay(float x, float y) const
 {
 	Vector3 centerPoint = cam.getLookPoint();
 	Vector3 upDir = cam.getUpVec();

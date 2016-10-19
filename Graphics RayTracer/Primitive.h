@@ -9,7 +9,7 @@ protected:
 	/// The material of this primitive. It is a pointer because many primitives
 	/// may use the same material, so a pointer allows us to only need one copy.
 	/// </summary>
-	obj_material* mat;
+	obj_material* mat = nullptr;
 
 
 	/// <summary>
@@ -24,6 +24,10 @@ protected:
 	/// </summary>
 	Vector3 maxBound = Vector3(0,0,0);
 public:
+	virtual ~Primitive()
+	{
+	}
+
 	//Primitive();
 	//~Primitive();
 	/// Gets the normal Ray of this primitive. Should be normalized.

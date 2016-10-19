@@ -2,7 +2,7 @@
 #include "AABB.h"
 
 
-BVHTree::BVHTree(int initialPrimSize)
+BVHTree::BVHTree(int initialPrimSize): leftNode(nullptr), rightNode(nullptr)
 {
 	this->prims = std::vector<Primitive*>();
 	this->prims.reserve(initialPrimSize);
@@ -77,12 +77,6 @@ void BVHTree::split()
 		rightvec.pop_back();
 	}
 
-	//if(leftvec.size() == 0 || rightvec.size() == 0)
-
-	//printf("this: %d\n", this->prims.size());
-	//printf("leftNode: %d\n", leftvec.size());
-	//printf("rightNode: %d\n\n", rightvec.size());
-
 	this->rightNode = new BVHTree(this->prims.size());
 	this->leftNode = new BVHTree(this->prims.size());
 
@@ -101,6 +95,7 @@ float BVHTree::intersects(Ray r, Primitive*& p) const
 	if (this->prims.size() == 0)
 		return -1.0f;
 
+	// If this node only has 1 primitive, then check if the ray intersects it.
 	if (this->prims.size() == 1)
 	{
 		float hit = this->prims[0]->intersects(r);
@@ -115,29 +110,28 @@ float BVHTree::intersects(Ray r, Primitive*& p) const
 		}
 	}
 
-
-	AABB bounds = AABB(this->minBound, this->maxBound);
+	//Check to see if the ray intersects the bounding box defined by this BVHTree node
+	AABB bounds = AABB(this->minBound, this->maxBound); // TODO: Could store this, not sure its worth it.
 
 	float dist = bounds.intersects(r);
-	//printf("DIST:%f\n", dist);
 
+	// Doesn't hit
 	if (dist <= 0.0f)
 	{
 		return -4;
 	}
 
+	// Hits, so now we have to 
 	Primitive* tempLeft = nullptr;
 	Primitive* tempRight = nullptr;
 
+
 	float lft = this->leftNode->intersects(r, tempLeft);
 	float rght = this->rightNode->intersects(r, tempRight);
-	//float lft = -1.0;
-	//printf("l:%f, r:%f\n", lft, rght);
 
+	// Check various collision cases.
 	if (lft > 0.0f && rght > 0.0f)
 	{
-		//printf("l:%f, r:%f\n", lft, rght);
-
 		if (lft < rght)
 		{
 			p = tempLeft;
@@ -167,12 +161,12 @@ float BVHTree::intersects(Ray r, Primitive*& p) const
 	}
 }
 
-Vector3 BVHTree::getMinBound()
+Vector3 BVHTree::getMinBound() const
 {
 	return this->minBound;
 }
 
-Vector3 BVHTree::getMaxBound()
+Vector3 BVHTree::getMaxBound() const
 {
 	return this->maxBound;
 }

@@ -1,5 +1,5 @@
 //Hard code resolution for now
-#define RES 500
+#define RES 1000
 #define _USE_MATH_DEFINES
 
 #include "RayTracer.h"
@@ -8,7 +8,6 @@
 #include "Buffer.h"
 #include "objLoader.h"
 #include "RayGenerator.h"
-#include "list.h"
 #include <math.h>
 #include <vector>
 #include "Primitive.h"
@@ -18,8 +17,10 @@
 
 using namespace std;
 
+//There has to be some amount of jitter to calculations, or things won't end up right.
 #define JITTER_AMOUNT 0.0001f * (RES / 100)
 
+// Author: Alec Tiefenthal
 
 /// <summary>
 /// Returns the Vector3 representtaion of an obj_vector.
@@ -84,7 +85,7 @@ void set_def_mat(obj_material* mtl)
 /// <param name="camRay">The ray currently being shot out from the camera.</param>
 /// <param name="dist">The distance from the origin of the camRay to the primitive being hit.</param>
 /// <param name="closest">The closest primitive that is struct by the camRay.</param>
-/// <returns></returns>
+/// <returns>The vector representing the color of the point hit.</returns>
 Vector3 getBaseColor(BVHTree const& tree, std::vector<pointLight*> pointLights, Ray camRay, float dist, Primitive* closest)
 {
 	Vector3 colorVec = Vector3(0.0f, 0.0f, 0.0f);
@@ -95,18 +96,19 @@ Vector3 getBaseColor(BVHTree const& tree, std::vector<pointLight*> pointLights, 
 		Vector3 norm = closest->getNormal(hitPoint).getDirection();
 		Vector3 toLight = pointLights[i]->pos - hitPoint;
 		float distanceFromLight = toLight.length();
-		// norm.normalize();
 		toLight.normalize();
 
 		Vector3 ambMat = arrayToGenVec(closest->getMaterial()->amb);
 		Vector3 ambLight = arrayToGenVec(pointLights[i]->mat->amb);
-		Vector3 amb = (ambMat * ambLight);// / (1.1f);
+		Vector3 amb = (ambMat * ambLight);
 
 		Ray rayToLight = Ray(toLight, hitPoint + (JITTER_AMOUNT * norm));
-		float hitDist = tree.intersects(rayToLight, closest);
 
-		// if the primitive is in shadow, render it accordingly
-		if (hitDist >= 0.0f && hitDist < distanceFromLight)
+		Primitive* tempClose;
+		float hitDist = tree.intersects(rayToLight, tempClose);
+
+		 //if the primitive is in shadow, render it accordingly
+		if (hitDist > 0.0f && hitDist < distanceFromLight)
 		{
 			colorVec = colorVec + amb;
 		}
@@ -123,7 +125,7 @@ Vector3 getBaseColor(BVHTree const& tree, std::vector<pointLight*> pointLights, 
 			Vector3 specRefl = 2 * fmaxf(toLight.dot(norm), 0.0f) * norm - toLight;
 			Vector3 toView = (camRay.getOrigin() - hitPoint).normalize();
 			Vector3 spec = specMat * pow(fmaxf(toView.dot(specRefl), 0.0f), closest->getMaterial()->shiny) * (specLight);
-			colorVec = colorVec + (amb + dif + spec);
+			colorVec = colorVec + (amb + spec + dif);
 		}
 	}
 
@@ -155,9 +157,8 @@ float calcAllColors(int xRes, int yRes, Buffer<Vector3>& vectorBuffer, Camera co
 			Vector3 v = Vector3(0, 0, 0);
 
 			Primitive* closest = nullptr;
-			float minDist = -1.0f;
 
-			minDist = tree.intersects(r, closest);
+			float minDist = tree.intersects(r, closest);
 
 			if (minDist > 0.0f)
 			{
@@ -174,8 +175,6 @@ float calcAllColors(int xRes, int yRes, Buffer<Vector3>& vectorBuffer, Camera co
 					r = Ray(refl, hitPoint + (JITTER_AMOUNT * norm));
 
 					closest = nullptr;
-					minDist = -1.0f;
-
 					minDist = tree.intersects(r, closest);
 
 					if (minDist > 0.0f)
@@ -196,11 +195,11 @@ float calcAllColors(int xRes, int yRes, Buffer<Vector3>& vectorBuffer, Camera co
 	return maxComp;
 }
 
-int fakeMain(int argc, char** argv)
+int main(int argc, char** argv)
 {
 	int resX = RES;
 	int resY = RES;
-	if (argc == 4)
+	if (argc == 5)
 	{
 		resX = atoi(argv[3]);
 		resY = atoi(argv[4]);
@@ -218,8 +217,7 @@ int fakeMain(int argc, char** argv)
 	vector<Primitive*> prims = vector<Primitive*>();
 	prims.reserve(objData.sphereCount + objData.faceCount);
 
-	//set_def_mat(defaultMat);
-	obj_material* default_mat = new obj_material;//(obj_material*)malloc(sizeof(obj_material));
+	obj_material* default_mat = new obj_material;
 	set_def_mat(default_mat);
 
 	// Create all the sphere objects from loaded data and add them to the vector of primitives.
@@ -255,13 +253,8 @@ int fakeMain(int argc, char** argv)
 	{
 		pointLight* p = new pointLight(objToGenVec(objData.vertexList[objData.lightPointList[i]->pos_index]),
 		                               objData.materialList[objData.lightPointList[i]->material_index]);
-		//pointLight* p = (pointLight*)malloc(sizeof(pointLight));
-		//p->mat = objData.materialList[objData.lightPointList[i]->material_index];
-		//p->pos = objToGenVec(objData.vertexList[objData.lightPointList[i]->pos_index]);
 		pointLights.push_back(p);
 	}
-
-	printf("BEGIN TREE\n");
 
 	// Begin creating the BVHTree
 	BVHTree tree = BVHTree(prims.size());
@@ -272,9 +265,6 @@ int fakeMain(int argc, char** argv)
 	}
 	tree.split();
 
-	printf("END TREE\n");
-	printf("%d", tree.getSize());
-
 	Vector3 look = objToGenVec(objData.vertexList[objData.camera->camera_look_point_index]);
 	Vector3 pos = objToGenVec(objData.vertexList[objData.camera->camera_pos_index]);
 	Vector3 up = objToGenVec(objData.normalList[objData.camera->camera_up_norm_index]);
@@ -283,13 +273,16 @@ int fakeMain(int argc, char** argv)
 	Buffer<Vector3> vectorBuffer = Buffer<Vector3>(resX, resY);
 
 	float maxComp = calcAllColors(resX, resY, vectorBuffer, Camera(pos, look, up), pointLights, tree);
+	printf("Max: %f", maxComp);
 	for (int y = 0; y < resY; y++)
 		for (int x = 0; x < resX; x++)
 			colorBuffer.at(x, y) = (vectorBuffer.at(x, y) / maxComp) * 255.0f;
 
 	simplePNG_write(argv[2], colorBuffer.getWidth(), colorBuffer.getHeight(), (unsigned char*)&colorBuffer.at(0, 0));
 
-	//prims.clear();
+	// Technically I don't need to do this, as the OS should free all the memory
+	// once the program terminates, but in case I make this not in main
+	// later I'll free everything.
 	for (size_t i = 0; i < prims.size(); i++)
 	{
 		delete prims[i];
@@ -299,26 +292,6 @@ int fakeMain(int argc, char** argv)
 		delete pointLights[i];
 	}
 	delete default_mat;
-	//prims.clear();
-	//delete prims;
-	//98MB 1920x1920
-	//121MB 1920x1920
 	return 0;
-}
-
-int main(int argc, char** argv)
-{
-	int tempx = 0;
-	for (int i = 0; i < 200000000; i++)
-	{
-		tempx++;
-	}
-	int x = fakeMain(argc, argv);
-	tempx = 0;
-	for (int i = 0; i < 200000000; i++)
-	{
-		tempx++;
-	}
-	return x;
 }
 
